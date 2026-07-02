@@ -26,6 +26,11 @@
       </div>
     </div>
   </div>
+  <div class="pinned-section" id="pinned-section" style="display:none">
+    <div class="tree-section-label">📌 Pinned</div>
+    <div id="pinned-items"></div>
+    <div class="pinned-divider"></div>
+  </div>
   <div class="tree" id="file-tree"></div>
 </div>
 
@@ -58,11 +63,5 @@
 </div>
 
 <script src="/static/script.js"></script>
-<script>
-// on load
-document.addEventListener('DOMContentLoaded', function() {
-  loadTree();
-});
-</script>
 </body>
 </html>
