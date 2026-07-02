@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obsidian Web Viewer</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- sidebar toggle -->
+<div class="sidebar-toggle-wrap">
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+</div>
+
+<!-- sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L20 9V21H4V9L12 3Z"/><path d="M9 21V12H15V21"/></svg>
+    <div>
+      <h2>obsidian web viewer</h2>
+      <div class="vault-name">web viewer</div>
+      <div class="vault-search-row">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21L16.65 16.65"/></svg>
+        <input type="text" placeholder="Search files..." oninput="searchFiles(this.value)">
+      </div>
+    </div>
+  </div>
+  <div class="tree" id="file-tree"></div>
+</div>
+
+<!-- main content -->
+<div class="main" id="main">
+  <div class="top-bar">
+    <a href="#">← Home</a>
+    <a href="#">↑ projects</a>
+    <div class="spacer"></div>
+    <span class="file-path" id="file-path">content/</span>
+    <div class="actions">
+      <button class="btn" id="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
+      <button class="btn btn-danger" id="delete-btn" onclick="deleteFile()" style="display:none">🗑 Delete</button>
+    </div>
+  </div>
+  <div class="content" id="content">
+    <div class="markdown-view" id="view-content"></div>
+    <div class="hidden" id="edit-content">
+      <div class="editor-header">
+        <div class="filename" id="edit-filename"></div>
+        <div class="path" id="edit-path"></div>
+      </div>
+      <textarea class="editor-textarea" id="editor"></textarea>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="saveFile()">💾 Save</button>
+        <button class="btn" onclick="toggleEdit()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/script.js"></script>
+<script>
+// on load
+document.addEventListener('DOMContentLoaded', function() {
+  loadTree();
+});
+</script>
+</body>
+</html>
