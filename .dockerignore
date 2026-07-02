@@ -1,0 +1,10 @@
+# Dockerビルドコンテキスト除外
+__pycache__/
+.git/
+.gitignore
+docs/
+drafts/
+.env
+content/
+*.md
+*.pyc

@@ -1,0 +1,11 @@
+services:
+  obsidian-web-viewer:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      # 自分のObsidian vaultパスに変更してね
+      - ./content:/app/content
+    environment:
+      - TZ=Asia/Tokyo
+    restart: unless-stopped
