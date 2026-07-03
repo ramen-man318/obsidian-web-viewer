@@ -40,7 +40,7 @@ body {
   border: 1px solid #30363d;
   padding: 6px 10px;
 }
-.main.full { margin-left: -280px; }
+.main.full { margin-left: 0; }
 
 /* ─── sidebar ─── */
 .sidebar {
