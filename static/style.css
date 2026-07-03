@@ -93,7 +93,11 @@ body {
   border-color: #58a6ff;
 }
 
-/* ─── tree ─── */
+#edit-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
 .tree {
   flex: 1;
   overflow-y: auto;
@@ -144,8 +148,8 @@ body {
 #pinned-section {
   margin: 4px 12px;
   padding: 4px 0;
-  background: #1c2128;
-  border: 1px solid #30363d;
+  background: #2d333b;
+  border: 1px solid #444c56;
   border-radius: 8px;
   max-height: 45vh;
   overflow-y: auto;

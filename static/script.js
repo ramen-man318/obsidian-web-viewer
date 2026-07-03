@@ -26,6 +26,7 @@ function navigateHome() {
   document.getElementById('view-content').classList.remove('hidden');
   document.getElementById('edit-btn').textContent = '✏️ Edit';
   document.getElementById('edit-btn').className = 'btn btn-primary';
+  document.getElementById('edit-btn').disabled = true;
   document.getElementById('delete-btn').style.display = 'none';
   // Remove tree active highlight
   document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
@@ -223,6 +224,7 @@ function navigateToFolder(path) {
   document.getElementById('view-content').classList.remove('hidden');
   document.getElementById('edit-btn').textContent = '✏️ Edit';
   document.getElementById('edit-btn').className = 'btn btn-primary';
+  document.getElementById('edit-btn').disabled = true;
   document.getElementById('delete-btn').style.display = 'none';
 }
 
@@ -295,6 +297,7 @@ function openFile(path) {
     view.classList.remove('hidden');
     document.getElementById('edit-btn').textContent = '✏️ Edit';
     document.getElementById('edit-btn').className = 'btn btn-primary';
+    document.getElementById('edit-btn').disabled = false;
     // Update preview
     updatePreview();
     // highlight active item
@@ -307,6 +310,7 @@ function openFile(path) {
 }
 
 function toggleEdit() {
+  if (!currentPath) return;
   var view = document.getElementById('view-content');
   var edit = document.getElementById('edit-content');
   var btn = document.getElementById('edit-btn');
