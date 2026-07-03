@@ -48,8 +48,6 @@ body {
   min-width: 280px;
   background: #161b22;
   border-right: 1px solid #30363d;
-  display: flex;
-  flex-direction: column;
   height: 100vh;
   position: sticky;
   top: 0;
@@ -93,7 +91,11 @@ body {
   border-color: #58a6ff;
 }
 
-/* ─── tree ─── */
+#edit-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
 .tree {
   flex: 1;
   overflow-y: auto;
@@ -139,15 +141,69 @@ body {
   text-align: center;
 }
 .tree-toggle.collapsed { transform: rotate(-90deg); }
+
+/* ─── pinned section ─── */
+#pinned-section {
+  margin: 0;
+  padding: 4px 0;
+  background: #2d333b;
+  border: 1px solid #444c56;
+  border-radius: 8px;
+}
+#pinned-section .tree-section-label {
+  padding: 4px 12px;
+  background: #262c36;
+  border-bottom: 1px solid #444c56;
+  border-radius: 8px 8px 0 0;
+}
+#pinned-section .tree-item {
+  padding: 2px 12px 2px 20px;
+}
+#pinned-section .tree-item:hover {
+  background: #353b45;
+}
+#pinned-section .tree-children {
+  padding-left: 16px;
+}
+.pinned-divider {
+  display: none;
+}
+.tree-item-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex-shrink: 1;
+}
+.tree-icon {
+  flex-shrink: 0;
+  width: 16px;
+  margin-right: 4px;
+  text-align: center;
+  font-size: 12px;
+}
 .tree-item .pin {
   margin-left: auto;
   font-size: 11px;
   color: #8b949e;
   opacity: 0;
+  cursor: pointer;
   transition: opacity 0.15s;
+  padding: 2px 4px;
+  border-radius: 3px;
+  user-select: none;
+  flex-shrink: 0;
 }
-.tree-item:hover .pin { opacity: 1; }
+.tree-item:hover .pin { opacity: 0.4; }
+.tree-item .pin:hover { background: #1c2128; }
 .tree-item .pin.active { opacity: 1; color: #d29922; }
+.tree-item .pin.active:hover { background: #2b1f0a; }
+
+/* Mobile: no hover so always show pin faint */
+@media (hover: none) {
+  .tree-item .pin { opacity: 0.4; }
+  .tree-item .pin.active { opacity: 1; color: #d29922; }
+}
 
 /* ─── main content ─── */
 .main {
@@ -377,7 +433,7 @@ body {
   .main.full { margin-left: 0; }
   .top-bar { padding: 8px 12px; flex-wrap: wrap; }
   .top-bar a { display: none; }
-  .top-bar .file-path { font-size: 11px; width: 100%; order: 3; }
+  .top-bar .file-path { font-size: 11px; width: 100%; }
   .content { padding: 12px; }
   .markdown-view h1 { font-size: 1.4em; }
   .markdown-view h2 { font-size: 1.25em; }

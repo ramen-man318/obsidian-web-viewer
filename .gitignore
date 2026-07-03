@@ -1,10 +1,13 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
+# Environment
 .env
 venv/
 .venv/
+
+# Legacy content dir (now uses OBSIDIAN_VAULT_PATH or ~/vault)
+content/
 
 # OS
 .DS_Store
