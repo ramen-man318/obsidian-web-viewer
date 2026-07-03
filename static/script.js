@@ -2,6 +2,39 @@
 var currentPath = '';
 var treeData = null;
 
+/* ─── home screen ─── */
+var HOME_CONTENT = '<h1>📖 Obsidian Web Viewer</h1>'
+  + '<p>Vault内のファイルをブラウザで閲覧・編集するためのツールです。</p>'
+  + '<hr>'
+  + '<h2>使い方</h2>'
+  + '<ul>'
+  + '<li><strong>ファイルを開く</strong> — 左のサイドバーからファイルをクリック</li>'
+  + '<li><strong>フォルダを開く</strong> — ▶ をクリックして展開、フォルダ名をクリックして内容表示</li>'
+  + '<li><strong>ピン止め</strong> — 📌 アイコンをクリックするとファイル/フォルダを上部に固定表示</li>'
+  + '<li><strong>編集</strong> — 右上の ✏️ Edit ボタンで編集モードに切り替え</li>'
+  + '<li><strong>検索</strong> — サイドバー上部の検索ボックスでファイル検索</li>'
+  + '<li><strong>Wikiリンク</strong> — <code>[[ファイル名]]</code> 形式のリンクをクリックしてジャンプ</li>'
+  + '</ul>'
+  + '<hr>'
+  + '<p style="color:#8b949e;font-size:12px">サイドバーの「obsidian web viewer」をクリックするとこの画面に戻ります。</p>';
+
+function navigateHome() {
+  currentPath = '';
+  document.getElementById('file-path').textContent = 'Home';
+  document.getElementById('view-content').innerHTML = HOME_CONTENT;
+  document.getElementById('edit-content').classList.add('hidden');
+  document.getElementById('view-content').classList.remove('hidden');
+  document.getElementById('edit-btn').textContent = '✏️ Edit';
+  document.getElementById('edit-btn').className = 'btn btn-primary';
+  document.getElementById('delete-btn').style.display = 'none';
+  // Remove tree active highlight
+  document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
+  // Clear editor
+  document.getElementById('editor').value = '';
+  document.getElementById('edit-filename').textContent = '';
+  document.getElementById('edit-path').textContent = '';
+}
+
 /* ─── sidebar toggle ─── */
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('collapsed');
@@ -382,6 +415,7 @@ function updatePreview() {
 
 /* ─── init ─── */
 document.addEventListener('DOMContentLoaded', function() {
+  navigateHome();
   loadTree();
   loadPins();
   // Wire up live preview on editor input
