@@ -48,8 +48,6 @@ body {
   min-width: 280px;
   background: #161b22;
   border-right: 1px solid #30363d;
-  display: flex;
-  flex-direction: column;
   height: 100vh;
   position: sticky;
   top: 0;
@@ -146,7 +144,7 @@ body {
 
 /* ─── pinned section ─── */
 #pinned-section {
-  margin: 4px 12px;
+  margin: 0;
   padding: 4px 0;
   background: #2d333b;
   border: 1px solid #444c56;
