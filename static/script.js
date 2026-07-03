@@ -475,6 +475,28 @@ function renderMarkdown(text) {
     .replace(/^### (.+)$/gm,'<h3>$1</h3>')
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    // ponytail: markdown tables (GFM style) → HTML tables
+    .replace(/^(\|.+\|(?:\n\|.+\|)*)$/gm, function(m) {
+      var rows = m.split('\n');
+      if (rows.length < 2) return m;
+      var html = '<table><thead><tr>';
+      var headers = rows[0].split('|').slice(1, -1);
+      for (var i = 0; i < headers.length; i++) {
+        html += '<th>' + headers[i].trim() + '</th>';
+      }
+      html += '</tr></thead><tbody>';
+      for (var r = 2; r < rows.length; r++) {
+        if (!rows[r].trim()) continue;
+        var cells = rows[r].split('|').slice(1, -1);
+        html += '<tr>';
+        for (var c = 0; c < cells.length; c++) {
+          html += '<td>' + cells[c].trim() + '</td>';
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      return html;
+    })
     // ponytail: indented lists (2, 4, 6, 8 spaces → proportional margin)
     .replace(/^( {2,8})- (.+)$/gm, function(m, spaces, text) {
       var indent = (spaces.length / 2) * 1.5;
