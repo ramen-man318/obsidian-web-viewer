@@ -525,16 +525,16 @@ function updatePreview() {
 
 /* ─── init ─── */
 document.addEventListener('DOMContentLoaded', function() {
-  navigateHome();
+  // Check URL params BEFORE navigateHome so it doesn't wipe them
+  var params = new URLSearchParams(window.location.search);
+  var pathParam = params.get('path');
+  if (!pathParam) navigateHome();
   loadTree();
   loadPins();
   // Wire up live preview on editor input
   document.getElementById('editor').addEventListener('input', updatePreview);
-  // Restore URL state
-  var params = new URLSearchParams(window.location.search);
-  var pathParam = params.get('path');
+  // Restore URL state — wait for treeData from loadTree()
   if (pathParam) {
-    // Wait for tree to load before opening file
     var checkTree = setInterval(function() {
       if (treeData) {
         clearInterval(checkTree);
