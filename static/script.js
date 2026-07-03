@@ -61,6 +61,7 @@ function loadTree() {
     treeData = data.tree;
     var tree = document.getElementById('file-tree');
     tree.innerHTML = renderTree(data.tree, '');
+    loadPins(); // re-render pins now that treeData is available
   });
 }
 
@@ -108,7 +109,7 @@ function renderTree(items, parentPath) {
 }
 
 function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');
 }
 
 function updatePinIcons() {
@@ -119,7 +120,76 @@ function updatePinIcons() {
   });
 }
 
+/* ponytail: find folder children in treeData for pinned expansion */
+function findFolderChildren(path, items) {
+  var parts = path.split('/');
+  var cur = items;
+  for (var i = 0; i < parts.length; i++) {
+    var found = null;
+    for (var j = 0; j < cur.length; j++) {
+      if (cur[j].name === parts[i] && cur[j].type === 'folder') {
+        found = cur[j];
+        break;
+      }
+    }
+    if (!found) return null;
+    cur = found.children;
+  }
+  return cur;
+}
+
 /* ─── pinned section ─── */
+function isFolder(path) {
+  // ponytail: no extension = folder
+  return path.indexOf('.') === -1;
+}
+
+function navigateToFolder(path) {
+  // Expand tree to reach the folder
+  var parts = path.split('/');
+  var current = '';
+  for (var i = 0; i < parts.length; i++) {
+    current = current ? current + '/' + parts[i] : parts[i];
+    var item = document.querySelector('.tree-item[data-path="' + current + '"]');
+    if (item) {
+      var toggle = item.querySelector('.tree-toggle');
+      if (toggle && toggle.textContent === '▶') {
+        toggle.click();
+      }
+    }
+  }
+  // Highlight
+  document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
+  var target = document.querySelector('.tree-item[data-path="' + path + '"]');
+  if (target) {
+    target.classList.add('active');
+    target.scrollIntoView({block: 'nearest'});
+  }
+  // Show folder path in main area
+  currentPath = '';
+  document.getElementById('file-path').textContent = 'vault/' + path + '/';
+  document.getElementById('view-content').innerHTML = '<p style="color:#8b949e">📁 ' + escHtml(path) + '/</p>';
+  document.getElementById('edit-content').classList.add('hidden');
+  document.getElementById('view-content').classList.remove('hidden');
+  document.getElementById('edit-btn').textContent = '✏️ Edit';
+  document.getElementById('edit-btn').className = 'btn btn-primary';
+  document.getElementById('delete-btn').style.display = 'none';
+}
+
+function togglePinFolder(el, path) {
+  var state = getOpenFolders();
+  var key = '_pin_' + path;
+  if (state[key]) {
+    delete state[key];
+    el.textContent = '▶';
+  } else {
+    state[key] = true;
+    el.textContent = '▼';
+  }
+  setOpenFolders(state);
+  loadPins();
+}
+
 function loadPins() {
   var container = document.getElementById('pinned-items');
   var pins = getPins();
@@ -130,14 +200,28 @@ function loadPins() {
   }
   document.getElementById('pinned-section').style.display = '';
   var html = '';
+  var state = getOpenFolders();
   for (var i = 0; i < pins.length; i++) {
-    var icon = pins[i].indexOf('/') >= 0 ? '📄' : '📁';
-    html += '<div class="tree-item" data-path="' + pins[i] + '" onclick="openFile(\'' + pins[i] + '\')">'
-      + '<span class="tree-toggle" style="visibility:hidden">▼</span>'
+    var isDir = isFolder(pins[i]);
+    var icon = isDir ? '📁' : '📄';
+    var key = '_pin_' + pins[i];
+    var isOpen = state[key] === true;
+
+    html += '<div class="tree-item" data-path="' + pins[i] + '">'
+      + '<span class="tree-toggle" ' + (isDir ? 'onclick="togglePinFolder(this,\'' + pins[i] + '\')"' : 'style="visibility:hidden"') + '>'
+      + (isDir ? (isOpen ? '▼' : '▶') : '▼') + '</span>'
       + '<span class="tree-icon">' + icon + '</span>'
-      + '<span class="tree-item-name">' + escHtml(pins[i]) + '</span>'
+      + '<span class="tree-item-name" onclick="' + (isDir ? 'navigateToFolder(\'' + pins[i] + '\')' : 'openFile(\'' + pins[i] + '\')') + '">' + escHtml(pins[i]) + '</span>'
       + '<span class="pin active" onclick="event.stopPropagation();togglePin(\'' + pins[i] + '\')">📌</span>'
       + '</div>';
+
+    // Show children if folder is open and treeData is loaded
+    if (isDir && isOpen && treeData) {
+      var children = findFolderChildren(pins[i], treeData);
+      if (children && children.length > 0) {
+        html += '<div class="tree-children">' + renderTree(children, pins[i]) + '</div>';
+      }
+    }
   }
   container.innerHTML = html;
 }
@@ -146,7 +230,10 @@ function loadPins() {
 function openFile(path) {
   currentPath = path;
   document.getElementById('file-path').textContent = 'vault/' + path;
-  fetch('/api/read?path=' + encodeURIComponent(path)).then(function(r){return r.json()}).then(function(data){
+  fetch('/api/read?path=' + encodeURIComponent(path)).then(function(r){
+    if (!r.ok) { throw new Error('Failed to load'); }
+    return r.json();
+  }).then(function(data){
     document.getElementById('view-content').innerHTML = renderMarkdown(data.content);
     document.getElementById('edit-filename').textContent = path.split('/').pop();
     document.getElementById('edit-path').textContent = 'vault/' + path;
@@ -158,10 +245,14 @@ function openFile(path) {
     view.classList.remove('hidden');
     document.getElementById('edit-btn').textContent = '✏️ Edit';
     document.getElementById('edit-btn').className = 'btn btn-primary';
+    // Update preview
+    updatePreview();
     // highlight active item
     document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
     var activeEl = document.querySelector('.tree-item[data-path="' + path + '"]');
     if (activeEl) activeEl.classList.add('active');
+  }).catch(function(err) {
+    document.getElementById('view-content').innerHTML = '<p style="color:#f85149">Error: ' + escHtml(err.message) + '</p>';
   });
 }
 
@@ -177,6 +268,7 @@ function toggleEdit() {
   } else {
     btn.textContent = '👁 View';
     btn.className = 'btn';
+    updatePreview();
   }
 }
 
@@ -186,14 +278,16 @@ function saveFile() {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({path:currentPath, content:content})
-  }).then(function(r){return r.json()}).then(function(data){
+  }).then(function(r){
+    if (!r.ok) { return r.json().then(function(d){ throw new Error(d.error || 'Save failed'); }); }
+    return r.json();
+  }).then(function(data){
     if (data.ok) {
-      alert('Saved!');
       toggleEdit();
       openFile(currentPath);
-    } else {
-      alert('Error: '+data.error);
     }
+  }).catch(function(err) {
+    alert('Error: '+err.message);
   });
 }
 
@@ -227,16 +321,13 @@ function searchFiles(q) {
   });
 }
 
-/* ─── markdown (simple) ─── */
-/* ponytail: 2-space indent → visual margin, [[wikilink]] → clickable */
+/* ─── markdown ─── */
 function renderMarkdown(text) {
   // ponytail: strip YAML frontmatter (---\n...\n---)
   text = text.replace(/^---\n[\s\S]*?\n---\n*/, '');
   var html = text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    // ponytail: 2-space indent → 4-space indent
-    .replace(/^  (- .+)/gm, '    $1')
-    // ponytail: [[wikilink]] → clickable anchor (after escaping, so tags survive)
+    // ponytail: [[wikilink]] → clickable anchor
     .replace(/\[\[([^\]]+)\]\]/g, function(m, name) {
       var found = findNote(name);
       if (found) return '<a href="#" class="wikilink" onclick="navigateToNote(\''+name+'\');return false">'+escHtml(name)+'</a>';
@@ -247,11 +338,19 @@ function renderMarkdown(text) {
     .replace(/^### (.+)$/gm,'<h3>$1</h3>')
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/^- (.+)$/gm,'<li>$1</li>')
-    .replace(/^ {4}- (.+)$/gm,'<li style="margin-left:1.5em">$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>')
-    .replace(/\n\n/g,'</p><p>')
-    .replace(/^(?!<[hlu])(.+)$/gm,'$1');
+    // ponytail: indented lists (2, 4, 6, 8 spaces → proportional margin)
+    .replace(/^( {2,8})- (.+)$/gm, function(m, spaces, text) {
+      var indent = (spaces.length / 2) * 1.5;
+      return '<li style="margin-left:' + indent + 'em">' + text + '</li>';
+    })
+    // ponytail: flat lists at column 0
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    // wrap consecutive <li> in <ul>
+    .replace(/(<li[^>]*>.*?<\/li>\n?)+/g, '<ul>$&</ul>')
+    // ponytail: 2-space indented text (non-list) → styled div
+    .replace(/^ {2}([^ \n].*)$/gm, '<div style="margin-left:1.5em">$1</div>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(?!<[hlu\d])(.+)$/gm, '$1');
   return '<p>'+html+'</p>';
 }
 
@@ -273,8 +372,18 @@ function navigateToNote(name) {
   if (path) openFile(path);
 }
 
+/* ─── live preview in edit mode ─── */
+function updatePreview() {
+  var content = document.getElementById('editor').value;
+  document.getElementById('edit-preview').innerHTML = content
+    ? renderMarkdown(content)
+    : '<p style="color:#8b949e">Preview will appear here...</p>';
+}
+
 /* ─── init ─── */
 document.addEventListener('DOMContentLoaded', function() {
   loadTree();
   loadPins();
+  // Wire up live preview on editor input
+  document.getElementById('editor').addEventListener('input', updatePreview);
 });

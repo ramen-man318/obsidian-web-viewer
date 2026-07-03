@@ -37,10 +37,8 @@
 <!-- main content -->
 <div class="main" id="main">
   <div class="top-bar">
-    <a href="#">← Home</a>
-    <a href="#">↑ projects</a>
+    <span class="file-path" id="file-path">vault/</span>
     <div class="spacer"></div>
-    <span class="file-path" id="file-path">content/</span>
     <div class="actions">
       <button class="btn" id="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
       <button class="btn btn-danger" id="delete-btn" onclick="deleteFile()" style="display:none">🗑 Delete</button>
@@ -57,6 +55,10 @@
       <div style="margin-top:12px;display:flex;gap:8px">
         <button class="btn btn-primary" onclick="saveFile()">💾 Save</button>
         <button class="btn" onclick="toggleEdit()">Cancel</button>
+      </div>
+      <div class="edit-preview-section">
+        <div class="tree-section-label" style="margin-top:16px">Preview</div>
+        <div class="markdown-view edit-preview" id="edit-preview"></div>
       </div>
     </div>
   </div>

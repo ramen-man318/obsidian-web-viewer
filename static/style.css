@@ -404,7 +404,7 @@ body {
   .main.full { margin-left: 0; }
   .top-bar { padding: 8px 12px; flex-wrap: wrap; }
   .top-bar a { display: none; }
-  .top-bar .file-path { font-size: 11px; width: 100%; order: 3; }
+  .top-bar .file-path { font-size: 11px; width: 100%; }
   .content { padding: 12px; }
   .markdown-view h1 { font-size: 1.4em; }
   .markdown-view h2 { font-size: 1.25em; }

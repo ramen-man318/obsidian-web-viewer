@@ -12,12 +12,12 @@ import os
 import json
 import subprocess
 from pathlib import Path
-from flask import Flask, request, jsonify, send_from_directory, abort
+from flask import Flask, request, jsonify, send_from_directory
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 
-# vaultディレクトリ（content/ をvaultルート扱い）
-VAULT_ROOT = Path(__file__).parent / 'content'
+# vaultディレクトリ（OBSIDIAN_VAULT_PATH 環境変数 → content/ フォールバック）
+VAULT_ROOT = Path(os.environ.get('OBSIDIAN_VAULT_PATH', Path.home() / 'vault'))
 VAULT_ROOT.mkdir(exist_ok=True)
 
 def safe_path(path_str) -> Path | None:
@@ -62,11 +62,11 @@ def read_file():
     path = request.args.get('path', '')
     p = safe_path(path)
     if p is None or not p.exists() or not p.is_file():
-        abort(404)
+        return jsonify({'error': 'Not found'}), 404
     try:
         content = p.read_text('utf-8')
-    except Exception:
-        abort(500)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     stat = p.stat()
     return jsonify({
         'path': path,
@@ -82,7 +82,7 @@ def save_file():
     content = data.get('content', '')
     p = safe_path(path)
     if p is None:
-        abort(400, 'Invalid path')
+        return jsonify({'error': 'Invalid path'}), 400
     p.parent.mkdir(parents=True, exist_ok=True)
     try:
         p.write_text(content, 'utf-8')
