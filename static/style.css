@@ -151,8 +151,6 @@ body {
   background: #2d333b;
   border: 1px solid #444c56;
   border-radius: 8px;
-  max-height: 45vh;
-  overflow-y: auto;
 }
 #pinned-section .tree-section-label {
   padding: 4px 12px;
