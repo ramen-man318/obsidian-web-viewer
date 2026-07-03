@@ -288,6 +288,9 @@ body {
   margin: 1em 0 0.5em;
 }
 .markdown-view h3 { font-size: 1.25em; margin: 1em 0 0.5em; }
+.markdown-view h4 { font-size: 1.1em; margin: 1em 0 0.5em; }
+.markdown-view h5 { font-size: 1em; margin: 1em 0 0.5em; color: #8b949e; }
+.markdown-view h6 { font-size: 0.9em; margin: 1em 0 0.5em; color: #8b949e; }
 .markdown-view p { margin-bottom: 1em; }
 .markdown-view ul, .markdown-view ol { margin: 0 0 1em; padding-left: 1.5em; }
 .markdown-view li { margin-bottom: 0.25em; }
