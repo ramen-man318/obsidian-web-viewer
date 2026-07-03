@@ -51,14 +51,19 @@
         <div class="filename" id="edit-filename"></div>
         <div class="path" id="edit-path"></div>
       </div>
-      <textarea class="editor-textarea" id="editor"></textarea>
-      <div style="margin-top:12px;display:flex;gap:8px">
-        <button class="btn btn-primary" onclick="saveFile()">💾 Save</button>
-        <button class="btn" onclick="toggleEdit()">Cancel</button>
+      <div class="edit-tabs" id="edit-tabs" style="display:none">
+        <button class="tab-btn tab-active" id="edit-tab-btn" onclick="switchEditTab('edit')">✏️ Edit</button>
+        <button class="tab-btn" id="preview-tab-btn" onclick="switchEditTab('preview')">👁 Preview</button>
       </div>
-      <div class="edit-preview-section">
-        <div class="tree-section-label" style="margin-top:16px">Preview</div>
-        <div class="markdown-view edit-preview" id="edit-preview"></div>
+      <div id="editor-area">
+        <textarea class="editor-textarea" id="editor"></textarea>
+        <div class="edit-actions">
+          <button class="btn btn-primary btn-save" onclick="saveFile()">💾 Save</button>
+          <button class="btn btn-cancel" onclick="toggleEdit()">Cancel</button>
+        </div>
+      </div>
+      <div class="markdown-view edit-preview" id="edit-preview-area" style="display:none">
+        <div id="edit-preview"></div>
       </div>
     </div>
   </div>

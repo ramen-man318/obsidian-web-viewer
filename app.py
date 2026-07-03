@@ -11,8 +11,9 @@ APIエンドポイント:
 import os
 import json
 import subprocess
+import mimetypes
 from pathlib import Path
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, send_file
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 
@@ -29,9 +30,19 @@ def safe_path(path_str) -> Path | None:
         return None
     return p
 
+def _visible_suffixes():
+    """表示可能な拡張子リストを返す"""
+    return {'.md', '.txt', '.json', '.yaml', '.yml', '.toml', '.csv',
+            '.xml', '.ini', '.cfg', '.conf', '.env', '.properties',
+            '.css', '.js', '.html', '.sh', '.bash', '.py', '.rb',
+            '.lua', '.sql', '.rs', '.go', '.zig', '.ts', '.jsx', '.tsx',
+            '.svg', '.drawio', '.excalidraw', '.png', '.jpg', '.jpeg',
+            '.gif', '.webp'}
+
+
 @app.route('/api/list')
 def list_files():
-    """vault内の.mdファイルをディレクトリツリーで返す"""
+    """vault内の表示可能ファイルをディレクトリツリーで返す"""
     def walk(dir_path):
         items = []
         try:
@@ -45,7 +56,7 @@ def list_files():
                         'type': 'folder',
                         'children': children
                     })
-                elif entry.suffix == '.md':
+                elif entry.suffix.lower() in _visible_suffixes():
                     rel = entry.relative_to(VAULT_ROOT)
                     items.append({
                         'name': entry.name,
@@ -117,6 +128,17 @@ def search_files():
         return jsonify({'error': 'rg not found'}), 500
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'search timeout'}), 504
+
+@app.route('/api/raw')
+def raw_file():
+    """画像などのバイナリファイルをMIME付きで返す"""
+    path = request.args.get('path', '')
+    p = safe_path(path)
+    if p is None or not p.exists() or not p.is_file():
+        return jsonify({'error': 'Not found'}), 404
+    mime, _ = mimetypes.guess_type(str(p))
+    return send_file(str(p), mimetype=mime or 'application/octet-stream')
+
 
 @app.route('/')
 def index():

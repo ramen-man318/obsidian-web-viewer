@@ -18,6 +18,16 @@ var HOME_CONTENT = '<h1>📖 Obsidian Web Viewer</h1>'
   + '<hr>'
   + '<p style="color:#8b949e;font-size:12px">サイドバーの「obsidian web viewer」をクリックするとこの画面に戻ります。</p>';
 
+function setUrlState() {
+  var params = new URLSearchParams();
+  if (currentPath) params.set('path', currentPath);
+  var editArea = document.getElementById('edit-content');
+  if (editArea && !editArea.classList.contains('hidden')) params.set('mode', 'edit');
+  var q = params.toString();
+  var url = q ? '?' + q : window.location.pathname;
+  history.replaceState(null, '', url);
+}
+
 function navigateHome() {
   currentPath = '';
   document.getElementById('file-path').textContent = 'Home';
@@ -28,12 +38,14 @@ function navigateHome() {
   document.getElementById('edit-btn').className = 'btn btn-primary';
   document.getElementById('edit-btn').disabled = true;
   document.getElementById('delete-btn').style.display = 'none';
+  document.getElementById('edit-tabs').style.display = 'none';
   // Remove tree active highlight
   document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
   // Clear editor
   document.getElementById('editor').value = '';
   document.getElementById('edit-filename').textContent = '';
   document.getElementById('edit-path').textContent = '';
+  setUrlState();
 }
 
 /* ─── sidebar toggle ─── */
@@ -150,13 +162,23 @@ function renderTree(items, parentPath) {
       var filePath = item.path;
       html += '<div class="tree-item" data-path="' + filePath + '" onclick="openFile(\'' + filePath + '\')">'
         + '<span class="tree-toggle" style="visibility:hidden">▼</span>'
-        + '<span class="tree-icon">📄</span>'
+        + '<span class="tree-icon">' + fileIcon(item.name) + '</span>'
         + '<span class="tree-item-name">' + escHtml(item.name) + '</span>'
         + '<span class="pin' + (isPinned(filePath) ? ' active' : '') + '" onclick="event.stopPropagation();togglePin(\'' + filePath + '\')">📌</span>'
         + '</div>';
     }
   }
   return html;
+}
+
+/* ponytail: file icon by extension */
+function fileIcon(name) {
+  var ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+  if (ext === 'md') return '📄';
+  if (['txt','csv','json','yaml','yml','toml','xml','ini','cfg','env'].indexOf(ext) >= 0) return '📋';
+  if (['py','js','ts','jsx','tsx','rb','go','rs','zig','sh','bash','lua','sql'].indexOf(ext) >= 0) return '⚙️';
+  if (['png','jpg','jpeg','gif','webp','svg'].indexOf(ext) >= 0) return '🖼️';
+  return '📄';
 }
 
 function escHtml(s) {
@@ -259,7 +281,7 @@ function loadPins() {
   var state = getOpenFolders();
   for (var i = 0; i < pins.length; i++) {
     var isDir = isFolder(pins[i]);
-    var icon = isDir ? '📁' : '📄';
+    var icon = isDir ? '📁' : fileIcon(pins[i]);
     var key = '_pin_' + pins[i];
     var isOpen = state[key] === true;
 
@@ -283,18 +305,49 @@ function loadPins() {
 }
 
 /* ─── file operations ─── */
+var IMG_EXTS = ['png','jpg','jpeg','gif','webp','svg'];
+
 function openFile(path) {
   currentPath = path;
   document.getElementById('file-path').textContent = 'vault/' + path;
+  var ext = path.split('.').pop().toLowerCase();
+  // ponytail: image files use /api/raw directly
+  if (IMG_EXTS.indexOf(ext) >= 0) {
+    document.getElementById('view-content').innerHTML = '<div style="text-align:center;padding:16px"><img src="/api/raw?path=' + encodeURIComponent(path) + '" style="max-width:100%;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>';
+    document.getElementById('edit-filename').textContent = path.split('/').pop();
+    document.getElementById('edit-path').textContent = 'vault/' + path;
+    document.getElementById('delete-btn').style.display = 'none';
+    document.getElementById('edit-tabs').style.display = 'none';
+    var view = document.getElementById('view-content');
+    var edit = document.getElementById('edit-content');
+    edit.classList.add('hidden');
+    view.classList.remove('hidden');
+    document.getElementById('edit-btn').textContent = '✏️ Edit';
+    document.getElementById('edit-btn').className = 'btn btn-primary';
+    document.getElementById('edit-btn').disabled = true;
+    document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
+    var activeEl = document.querySelector('.tree-item[data-path="' + path + '"]');
+    if (activeEl) activeEl.classList.add('active');
+    setUrlState();
+    return;
+  }
   fetch('/api/read?path=' + encodeURIComponent(path)).then(function(r){
     if (!r.ok) { throw new Error('Failed to load'); }
     return r.json();
   }).then(function(data){
-    document.getElementById('view-content').innerHTML = renderMarkdown(data.content);
+    // ponytail: non-md files shown as raw text
+    var isMd = path.toLowerCase().endsWith('.md');
+    if (isMd) {
+      document.getElementById('view-content').innerHTML = renderMarkdown(data.content);
+    } else {
+      document.getElementById('view-content').innerHTML = '<pre style="background:#1f2428;border:1px solid #30363d;border-radius:6px;padding:16px;overflow-x:auto;font-size:13px;line-height:1.5">' + escHtml(data.content) + '</pre>';
+    }
     document.getElementById('edit-filename').textContent = path.split('/').pop();
     document.getElementById('edit-path').textContent = 'vault/' + path;
     document.getElementById('editor').value = data.content;
     document.getElementById('delete-btn').style.display = 'inline-block';
+    document.getElementById('edit-tabs').style.display = '';
+    switchEditTab('edit');
     var view = document.getElementById('view-content');
     var edit = document.getElementById('edit-content');
     edit.classList.add('hidden');
@@ -308,6 +361,7 @@ function openFile(path) {
     document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
     var activeEl = document.querySelector('.tree-item[data-path="' + path + '"]');
     if (activeEl) activeEl.classList.add('active');
+    setUrlState();
   }).catch(function(err) {
     document.getElementById('view-content').innerHTML = '<p style="color:#f85149">Error: ' + escHtml(err.message) + '</p>';
   });
@@ -318,14 +372,39 @@ function toggleEdit() {
   var view = document.getElementById('view-content');
   var edit = document.getElementById('edit-content');
   var btn = document.getElementById('edit-btn');
+  var tabs = document.getElementById('edit-tabs');
   view.classList.toggle('hidden');
   edit.classList.toggle('hidden');
   if (edit.classList.contains('hidden')) {
     btn.textContent = '✏️ Edit';
     btn.className = 'btn btn-primary';
+    tabs.style.display = 'none';
   } else {
     btn.textContent = '👁 View';
     btn.className = 'btn';
+    tabs.style.display = '';
+    switchEditTab('edit');
+    updatePreview();
+  }
+  setUrlState();
+}
+
+/* ─── edit/preview tab switching ─── */
+function switchEditTab(tab) {
+  var editorArea = document.getElementById('editor-area');
+  var previewArea = document.getElementById('edit-preview-area');
+  var editTab = document.getElementById('edit-tab-btn');
+  var previewTab = document.getElementById('preview-tab-btn');
+  if (tab === 'preview') {
+    editorArea.style.display = 'none';
+    previewArea.style.display = '';
+    editTab.classList.remove('tab-active');
+    previewTab.classList.add('tab-active');
+  } else {
+    editorArea.style.display = '';
+    previewArea.style.display = 'none';
+    editTab.classList.add('tab-active');
+    previewTab.classList.remove('tab-active');
     updatePreview();
   }
 }
@@ -401,12 +480,18 @@ function renderMarkdown(text) {
       var indent = (spaces.length / 2) * 1.5;
       return '<li style="margin-left:' + indent + 'em">' + text + '</li>';
     })
+    // ponytail: numbered sub-list (e.g. "  1. text")
+    .replace(/^( {2,8})(\d+[.)] .+)$/gm, function(m, spaces, rest) {
+      var indent = (spaces.length / 2) * 1.5;
+      return '<li style="margin-left:' + indent + 'em;list-style:none">' + rest + '</li>';
+    })
     // ponytail: flat lists at column 0
     .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+[.)] .+)$/gm, '<li style="list-style:none">$1</li>')
     // wrap consecutive <li> in <ul>
     .replace(/(<li[^>]*>.*?<\/li>\n?)+/g, '<ul>$&</ul>')
-    // ponytail: 2-space indented text (non-list) → styled div
-    .replace(/^ {2}([^ \n].*)$/gm, '<div style="margin-left:1.5em">$1</div>')
+    // ponytail: 2-space indented text → li with no bullet (keeps indent within list context)
+    .replace(/^ {2}([^ \n].*)$/gm, '<li style="margin-left:1.5em;list-style:none">$1</li>')
     .replace(/\n\n/g, '</p><p>')
     .replace(/^(?!<[hlu\d])(.+)$/gm, '$1');
   return '<p>'+html+'</p>';
@@ -440,9 +525,24 @@ function updatePreview() {
 
 /* ─── init ─── */
 document.addEventListener('DOMContentLoaded', function() {
-  navigateHome();
+  // Check URL params BEFORE navigateHome so it doesn't wipe them
+  var params = new URLSearchParams(window.location.search);
+  var pathParam = params.get('path');
+  if (!pathParam) navigateHome();
   loadTree();
   loadPins();
   // Wire up live preview on editor input
   document.getElementById('editor').addEventListener('input', updatePreview);
+  // Restore URL state — wait for treeData from loadTree()
+  if (pathParam) {
+    var checkTree = setInterval(function() {
+      if (treeData) {
+        clearInterval(checkTree);
+        openFile(pathParam);
+        if (params.get('mode') === 'edit') {
+          setTimeout(function() { toggleEdit(); }, 100);
+        }
+      }
+    }, 50);
+  }
 });
