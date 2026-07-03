@@ -476,6 +476,12 @@ function renderMarkdown(text) {
     .replace(/^#### (.+)$/gm,'<h4>$1</h4>')
     .replace(/^##### (.+)$/gm,'<h5>$1</h5>')
     .replace(/^###### (.+)$/gm,'<h6>$1</h6>')
+    // ponytail: horizontal rule (---, ***, ___)
+    .replace(/^(-{3,}|\*{3,}|_{3,})\s*$/gm, '<hr>')
+    // ponytail: blockquote (> text — escaped to &gt; by now)
+    .replace(/^&gt;\s?(.+)$/gm, '<blockquote>$1</blockquote>')
+    // merge consecutive blockquotes
+    .replace(/<\/blockquote>\n<blockquote>/g, '<br>\n')
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/\*(.+?)\*/g,'<em>$1</em>')
     // ponytail: markdown tables (GFM style) → HTML tables

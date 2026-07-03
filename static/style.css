@@ -291,6 +291,19 @@ body {
 .markdown-view h4 { font-size: 1.1em; margin: 1em 0 0.5em; }
 .markdown-view h5 { font-size: 1em; margin: 1em 0 0.5em; color: #8b949e; }
 .markdown-view h6 { font-size: 0.9em; margin: 1em 0 0.5em; color: #8b949e; }
+.markdown-view hr {
+  border: none;
+  border-top: 1px solid #30363d;
+  margin: 1.5em 0;
+}
+.markdown-view blockquote {
+  border-left: 3px solid #a855f7;
+  margin: 0 0 1em;
+  padding: 0.3em 1em;
+  color: #c9d1d9;
+  background: #161b22;
+  border-radius: 0 4px 4px 0;
+}
 .markdown-view p { margin-bottom: 1em; }
 .markdown-view ul, .markdown-view ol { margin: 0 0 1em; padding-left: 1.5em; }
 .markdown-view li { margin-bottom: 0.25em; }

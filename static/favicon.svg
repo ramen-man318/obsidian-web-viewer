@@ -1,29 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
   <defs>
-    <linearGradient id="obsidian" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#1a1a2e"/>
-      <stop offset="40%" stop-color="#2d1b69"/>
-      <stop offset="100%" stop-color="#6c3b9e"/>
+      <stop offset="100%" stop-color="#0f0f23"/>
     </linearGradient>
-    <linearGradient id="crystal" x1="0" y1="0.3" x2="1" y2="0.8">
-      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="#6366f1" stop-opacity="0.3"/>
+    <linearGradient id="moon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="crystal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e9d5ff" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0.3"/>
     </linearGradient>
     <filter id="glow">
-      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feGaussianBlur stdDeviation="0.8" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
   </defs>
-  <!-- 三日月（月）のシルエット -->
-  <path d="M22 2C14.5 4 6 14 10 30c0 0-2-4-2-10s3-12 10-16s4-2 4-2z"
-        fill="url(#obsidian)" filter="url(#glow)"/>
-  <!-- クリスタルのファセット（結晶の断面） -->
-  <path d="M18 6l-4 8l6 4l-2-8z" fill="url(#crystal)" opacity="0.5"/>
-  <path d="M14 14l-3 6l5 2l-1-6z" fill="url(#crystal)" opacity="0.35"/>
-  <!-- 小さな輝き -->
-  <circle cx="17" cy="10" r="0.8" fill="#c084fc" opacity="0.8"/>
-  <circle cx="13" cy="18" r="0.5" fill="#a78bfa" opacity="0.6"/>
+  <!-- 背景: 角丸四角 -->
+  <rect x="1" y="1" width="30" height="30" rx="6" ry="6" fill="url(#bg)" stroke="#2d1b69" stroke-width="0.8"/>
+  <!-- 三日月 -->
+  <path d="M23 3C15 5 7 14 11 29c0 0-3-4-3-10s3-12 11-16s4-0 4-0z"
+        fill="url(#moon)" filter="url(#glow)"/>
+  <!-- 結晶ファセット -->
+  <path d="M19 7l-4 7l5 4l-2-9z" fill="url(#crystal)"/>
+  <path d="M15 14l-3 6l5 2l-1-7z" fill="url(#crystal)" opacity="0.5"/>
+  <!-- 輝き -->
+  <circle cx="17" cy="10" r="0.6" fill="#fff" opacity="0.9"/>
+  <circle cx="14" cy="18" r="0.4" fill="#fff" opacity="0.5"/>
 </svg>
