@@ -93,8 +93,25 @@ function loadTree() {
   fetch('/api/list').then(function(r){return r.json()}).then(function(data){
     treeData = data.tree;
     var tree = document.getElementById('file-tree');
-    tree.innerHTML = renderTree(data.tree, '');
-    loadPins(); // re-render pins now that treeData is available
+    // ponytail: root-level split into folders/files with section labels
+    var html = '';
+    var folders = [];
+    var files = [];
+    var FOLDER_ORDER = { 'output':1, 'projects':2, 'wiki':3, 'journal':4, 'raw':5, 'inbox':6, 'templates':7, 'agents':8, 'assets':9, 'archives':99 };
+    for (var i = 0; i < data.tree.length; i++) {
+      var item = data.tree[i];
+      if (item.type === 'folder') folders.push(item); else files.push(item);
+    }
+    folders.sort(function(a,b){return (FOLDER_ORDER[a.name]||50)-(FOLDER_ORDER[b.name]||50)});
+    files.sort(function(a,b){return a.name.localeCompare(b.name)});
+    if (folders.length) {
+      html += '<div class="tree-section-label">📁 FOLDERS</div>' + renderTree(folders, '');
+    }
+    if (files.length) {
+      html += '<div class="tree-section-label">📄 FILES</div>' + renderTree(files, '');
+    }
+    tree.innerHTML = html;
+    loadPins();
   });
 }
 
