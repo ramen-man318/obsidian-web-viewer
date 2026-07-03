@@ -263,7 +263,7 @@ function loadPins() {
       + '<span class="tree-toggle" ' + (isDir ? 'onclick="togglePinFolder(this,\'' + pins[i] + '\')"' : 'style="visibility:hidden"') + '>'
       + (isDir ? (isOpen ? '▼' : '▶') : '▼') + '</span>'
       + '<span class="tree-icon">' + icon + '</span>'
-      + '<span class="tree-item-name" onclick="' + (isDir ? 'navigateToFolder(\'' + pins[i] + '\')' : 'openFile(\'' + pins[i] + '\')') + '">' + escHtml(pins[i]) + '</span>'
+      + '<span class="tree-item-name" onclick="' + (isDir ? 'return false' : 'openFile(\'' + pins[i] + '\')') + '">' + escHtml(pins[i]) + '</span>'
       + '<span class="pin active" onclick="event.stopPropagation();togglePin(\'' + pins[i] + '\')">📌</span>'
       + '</div>';
 
