@@ -41,6 +41,7 @@ body {
   padding: 6px 10px;
 }
 .main.full { margin-left: 0; }
+.main.full .top-bar { padding-left: 48px; }
 
 /* ─── sidebar ─── */
 .sidebar {
@@ -488,6 +489,7 @@ body {
   .sidebar { position: fixed; z-index: 50; width: 260px; min-width: 260px; left: 0; top: 0; height: 100vh; transition: transform 0.2s; }
   .sidebar.collapsed { transform: translateX(-260px); }
   .main.full { margin-left: 0; }
+  .main.full .top-bar { padding-left: 48px; }
   .top-bar { padding: 8px 12px; flex-wrap: wrap; }
   .top-bar a { display: none; }
   .top-bar .file-path { font-size: 11px; width: 100%; }
