@@ -29,9 +29,19 @@ def safe_path(path_str) -> Path | None:
         return None
     return p
 
+def _visible_suffixes():
+    """表示可能な拡張子リストを返す"""
+    return {'.md', '.txt', '.json', '.yaml', '.yml', '.toml', '.csv',
+            '.xml', '.ini', '.cfg', '.conf', '.env', '.properties',
+            '.css', '.js', '.html', '.sh', '.bash', '.py', '.rb',
+            '.lua', '.sql', '.rs', '.go', '.zig', '.ts', '.jsx', '.tsx',
+            '.svg', '.drawio', '.excalidraw', '.png', '.jpg', '.jpeg',
+            '.gif', '.webp'}
+
+
 @app.route('/api/list')
 def list_files():
-    """vault内の.mdファイルをディレクトリツリーで返す"""
+    """vault内の表示可能ファイルをディレクトリツリーで返す"""
     def walk(dir_path):
         items = []
         try:
@@ -45,7 +55,7 @@ def list_files():
                         'type': 'folder',
                         'children': children
                     })
-                elif entry.suffix == '.md':
+                elif entry.suffix.lower() in _visible_suffixes():
                     rel = entry.relative_to(VAULT_ROOT)
                     items.append({
                         'name': entry.name,
