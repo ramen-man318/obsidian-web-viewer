@@ -483,11 +483,11 @@ function renderMarkdown(text) {
     // ponytail: numbered sub-list (e.g. "  1. text")
     .replace(/^( {2,8})(\d+[.)] .+)$/gm, function(m, spaces, rest) {
       var indent = (spaces.length / 2) * 1.5;
-      return '<li style="margin-left:' + indent + 'em">' + rest + '</li>';
+      return '<li style="margin-left:' + indent + 'em;list-style:none">' + rest + '</li>';
     })
     // ponytail: flat lists at column 0
     .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/^(\d+[.)] .+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+[.)] .+)$/gm, '<li style="list-style:none">$1</li>')
     // wrap consecutive <li> in <ul>
     .replace(/(<li[^>]*>.*?<\/li>\n?)+/g, '<ul>$&</ul>')
     // ponytail: 2-space indented text → li with no bullet (keeps indent within list context)
