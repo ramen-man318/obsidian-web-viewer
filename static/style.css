@@ -337,6 +337,23 @@ body {
   color: #8b949e;
   border-bottom-color: #8b949e44;
 }
+.markdown-view table {
+  border-collapse: collapse;
+  margin-bottom: 1em;
+  width: 100%;
+}
+.markdown-view th, .markdown-view td {
+  border: 1px solid #30363d;
+  padding: 8px 12px;
+  text-align: left;
+}
+.markdown-view th {
+  background: #161b22;
+  font-weight: 600;
+}
+.markdown-view tr:nth-child(even) {
+  background: #161b2211;
+}
 
 /* ─── editor ─── */
 .editor-header {
