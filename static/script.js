@@ -233,10 +233,14 @@ function togglePinFolder(el, path) {
   var key = '_pin_' + path;
   if (state[key]) {
     delete state[key];
-    el.textContent = '▶';
   } else {
+    // accordion: close all other pinned folders first
+    for (var k in state) {
+      if (k.indexOf('_pin_') === 0 && k !== key) {
+        delete state[k];
+      }
+    }
     state[key] = true;
-    el.textContent = '▼';
   }
   setOpenFolders(state);
   loadPins();

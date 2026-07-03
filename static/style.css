@@ -154,12 +154,9 @@ body {
 }
 #pinned-section .tree-section-label {
   padding: 4px 12px;
-  position: sticky;
-  top: 0;
   background: #262c36;
   border-bottom: 1px solid #444c56;
   border-radius: 8px 8px 0 0;
-  z-index: 1;
 }
 #pinned-section .tree-item {
   padding: 2px 12px 2px 20px;
