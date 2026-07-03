@@ -305,9 +305,32 @@ function loadPins() {
 }
 
 /* ─── file operations ─── */
+var IMG_EXTS = ['png','jpg','jpeg','gif','webp','svg'];
+
 function openFile(path) {
   currentPath = path;
   document.getElementById('file-path').textContent = 'vault/' + path;
+  var ext = path.split('.').pop().toLowerCase();
+  // ponytail: image files use /api/raw directly
+  if (IMG_EXTS.indexOf(ext) >= 0) {
+    document.getElementById('view-content').innerHTML = '<div style="text-align:center;padding:16px"><img src="/api/raw?path=' + encodeURIComponent(path) + '" style="max-width:100%;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>';
+    document.getElementById('edit-filename').textContent = path.split('/').pop();
+    document.getElementById('edit-path').textContent = 'vault/' + path;
+    document.getElementById('delete-btn').style.display = 'none';
+    document.getElementById('edit-tabs').style.display = 'none';
+    var view = document.getElementById('view-content');
+    var edit = document.getElementById('edit-content');
+    edit.classList.add('hidden');
+    view.classList.remove('hidden');
+    document.getElementById('edit-btn').textContent = '✏️ Edit';
+    document.getElementById('edit-btn').className = 'btn btn-primary';
+    document.getElementById('edit-btn').disabled = true;
+    document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
+    var activeEl = document.querySelector('.tree-item[data-path="' + path + '"]');
+    if (activeEl) activeEl.classList.add('active');
+    setUrlState();
+    return;
+  }
   fetch('/api/read?path=' + encodeURIComponent(path)).then(function(r){
     if (!r.ok) { throw new Error('Failed to load'); }
     return r.json();
@@ -458,13 +481,13 @@ function renderMarkdown(text) {
       return '<li style="margin-left:' + indent + 'em">' + text + '</li>';
     })
     // ponytail: numbered sub-list (e.g. "  1. text")
-    .replace(/^( {2,8})\d+[.)] (.+)$/gm, function(m, spaces, text) {
+    .replace(/^( {2,8})(\d+[.)] .+)$/gm, function(m, spaces, rest) {
       var indent = (spaces.length / 2) * 1.5;
-      return '<li style="margin-left:' + indent + 'em">' + text + '</li>';
+      return '<li style="margin-left:' + indent + 'em">' + rest + '</li>';
     })
     // ponytail: flat lists at column 0
     .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/^\d+[.)] (.+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+[.)] .+)$/gm, '<li>$1</li>')
     // wrap consecutive <li> in <ul>
     .replace(/(<li[^>]*>.*?<\/li>\n?)+/g, '<ul>$&</ul>')
     // ponytail: 2-space indented text → li with no bullet (keeps indent within list context)

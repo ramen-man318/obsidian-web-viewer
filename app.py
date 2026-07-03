@@ -11,8 +11,9 @@ APIエンドポイント:
 import os
 import json
 import subprocess
+import mimetypes
 from pathlib import Path
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, send_file
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 
@@ -127,6 +128,17 @@ def search_files():
         return jsonify({'error': 'rg not found'}), 500
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'search timeout'}), 504
+
+@app.route('/api/raw')
+def raw_file():
+    """画像などのバイナリファイルをMIME付きで返す"""
+    path = request.args.get('path', '')
+    p = safe_path(path)
+    if p is None or not p.exists() or not p.is_file():
+        return jsonify({'error': 'Not found'}), 404
+    mime, _ = mimetypes.guess_type(str(p))
+    return send_file(str(p), mimetype=mime or 'application/octet-stream')
+
 
 @app.route('/')
 def index():
