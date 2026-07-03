@@ -54,12 +54,23 @@ function toggleSidebar() {
   document.getElementById('main').classList.toggle('full');
 }
 
-/* ─── pin helpers (localStorage) ─── */
+/* ─── pin helpers (API) ─── */
+var _pinsCache = [];
 function getPins() {
-  try { return JSON.parse(localStorage.getItem('owv-pins') || '[]'); } catch(e) { return []; }
+  return _pinsCache;
+}
+function fetchPins() {
+  return fetch('/api/pins').then(function(r){ return r.json(); }).then(function(d){
+    _pinsCache = d.pins || [];
+  }).catch(function(){ _pinsCache = []; });
 }
 function setPins(pins) {
-  localStorage.setItem('owv-pins', JSON.stringify(pins));
+  _pinsCache = pins;
+  return fetch('/api/pins', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({pins: pins})
+  }).then(function(r){ return r.json(); }).catch(function(){});
 }
 function isPinned(path) {
   return getPins().indexOf(path) >= 0;
@@ -561,7 +572,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var pathParam = params.get('path');
   if (!pathParam) navigateHome();
   loadTree();
-  loadPins();
+  fetchPins().then(function(){ loadPins(); });
   // Wire up live preview on editor input
   document.getElementById('editor').addEventListener('input', updatePreview);
   // Restore URL state — wait for treeData from loadTree()

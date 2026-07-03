@@ -140,6 +140,34 @@ def raw_file():
     return send_file(str(p), mimetype=mime or 'application/octet-stream')
 
 
+PINS_FILE = os.environ.get('PINS_FILE', '/data/pins.json')
+
+def _load_pins():
+    try:
+        with open(PINS_FILE) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+def _save_pins(pins):
+    os.makedirs(os.path.dirname(PINS_FILE), exist_ok=True)
+    with open(PINS_FILE, 'w') as f:
+        json.dump(pins, f)
+
+
+@app.route('/api/pins')
+def get_pins():
+    return jsonify({'pins': _load_pins()})
+
+
+@app.route('/api/pins', methods=['PUT'])
+def set_pins():
+    data = request.get_json(force=True)
+    pins = data.get('pins', [])
+    _save_pins(pins)
+    return jsonify({'pins': pins})
+
+
 @app.route('/')
 def index():
     return send_from_directory('.', 'index.html')

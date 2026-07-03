@@ -4,8 +4,13 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      # 自分のObsidian vaultパスに変更してね
-      - ./content:/app/content
+      - /home/ramen_man/vault:/app/content
+      - pins_data:/data
     environment:
       - TZ=Asia/Tokyo
+      - OBSIDIAN_VAULT_PATH=/app/content
+      - PINS_FILE=/data/pins.json
     restart: unless-stopped
+
+volumes:
+  pins_data:
