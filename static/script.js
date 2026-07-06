@@ -588,3 +588,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 50);
   }
 });
+
+/* ─── new file creation ─── */
+function promptNewFile() {
+  // ponytail: simple prompt, no modal
+  var name = prompt('New file name (e.g. my-note.md or subfolder/new-note.md):');
+  if (!name) return;
+  // Must end with a visible extension
+  var ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+  var VISIBLE_EXTS = ['md','txt','json','yaml','yml','toml','csv','xml','ini','cfg','conf','env','properties','css','js','html','sh','bash','py','rb','lua','sql','rs','go','zig','ts','jsx','tsx','svg','drawio','excalidraw','png','jpg','jpeg','gif','webp'];
+  if (VISIBLE_EXTS.indexOf(ext) < 0) { name += '.md'; }
+  newFile(name);
+}
+
+function newFile(path) {
+  // Open blank file in edit mode — /api/save will create it on first save
+  currentPath = path;
+  document.getElementById('file-path').textContent = 'vault/' + path + ' (new)';
+  document.getElementById('view-content').innerHTML = '<p style="color:#8b949e">New file: ' + escHtml(path) + '</p>';
+  document.getElementById('edit-filename').textContent = path.split('/').pop();
+  document.getElementById('edit-path').textContent = 'vault/' + path;
+  document.getElementById('editor').value = '';
+  document.getElementById('delete-btn').style.display = 'none';
+  document.getElementById('edit-tabs').style.display = '';
+  switchEditTab('edit');
+  var view = document.getElementById('view-content');
+  var edit = document.getElementById('edit-content');
+  edit.classList.remove('hidden');
+  view.classList.remove('hidden');
+  document.getElementById('edit-btn').textContent = '👁 View';
+  document.getElementById('edit-btn').className = 'btn';
+  document.getElementById('edit-btn').disabled = false;
+  updatePreview();
+  // Remove tree active highlight
+  document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
+  setUrlState();
+}
