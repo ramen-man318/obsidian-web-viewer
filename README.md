@@ -60,6 +60,13 @@ python app.py
 
 ### compose.yaml（推奨）
 
+`.env` ファイルを作成して Vault パスを指定します（`.env.example` をコピーして編集）：
+
+```bash
+cp .env.example .env
+# .env を編集して OBSIDIAN_VAULT にVaultのパスを設定
+```
+
 ```yaml
 services:
   obsidian-web-viewer:

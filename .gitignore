@@ -1,8 +1,10 @@
 # Python
 __pycache__/
 *.py[cod]
+
 # Environment
 .env
+
 venv/
 .venv/
 
