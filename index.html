@@ -69,6 +69,29 @@
         <div id="edit-preview"></div>
       </div>
     </div>
+    <div class="hidden" id="newfile-content">
+      <div class="newfile-box">
+        <h2>📄 New File</h2>
+        <div class="newfile-field">
+          <label>Path</label>
+          <input type="text" id="newfile-path" placeholder="e.g. my-note.md or subfolder/new-note.md" autocomplete="off">
+        </div>
+        <div class="edit-tabs">
+          <button class="tab-btn tab-active" id="nfe-tab-edit" onclick="nfeSwitchTab('edit')">✏️ Edit</button>
+          <button class="tab-btn" id="nfe-tab-preview" onclick="nfeSwitchTab('preview')">👁 Preview</button>
+        </div>
+        <div id="nfe-editor-area">
+          <textarea id="newfile-editor" placeholder="Write your content..."></textarea>
+        </div>
+        <div class="markdown-view edit-preview hidden" id="nfe-preview-area">
+          <div id="nfe-preview"></div>
+        </div>
+        <div class="newfile-actions">
+          <button class="btn btn-primary btn-save" onclick="saveNewFile()">💾 Save</button>
+          <button class="btn btn-cancel" onclick="cancelNewFile()">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
