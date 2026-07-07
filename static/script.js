@@ -56,6 +56,14 @@ function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('collapsed');
   document.getElementById('main').classList.toggle('full');
 }
+// ponytail: mobile detection for auto-close sidebar
+function isMobile() { return window.matchMedia('(max-width: 640px)').matches; }
+function autoCloseSidebar() {
+  // ponytail: only close on mobile when sidebar is currently open
+  if (isMobile() && !document.getElementById('sidebar').classList.contains('collapsed')) {
+    toggleSidebar();
+  }
+}
 
 /* ─── pin helpers (API) ─── */
 var _pinsCache = [];
@@ -323,6 +331,7 @@ var IMG_EXTS = ['png','jpg','jpeg','gif','webp','svg'];
 
 function openFile(path) {
   currentPath = path;
+  document.getElementById('newfile-content').classList.add('hidden');
   document.getElementById('file-path').textContent = 'vault/' + path;
   var ext = path.split('.').pop().toLowerCase();
   // ponytail: image files use /api/raw directly
@@ -343,6 +352,7 @@ function openFile(path) {
     var activeEl = document.querySelector('.tree-item[data-path="' + path + '"]');
     if (activeEl) activeEl.classList.add('active');
     setUrlState();
+    autoCloseSidebar();
     return;
   }
   fetch('/api/read?path=' + encodeURIComponent(path)).then(function(r){
@@ -376,6 +386,7 @@ function openFile(path) {
     var activeEl = document.querySelector('.tree-item[data-path="' + path + '"]');
     if (activeEl) activeEl.classList.add('active');
     setUrlState();
+    autoCloseSidebar();
   }).catch(function(err) {
     document.getElementById('view-content').innerHTML = '<p style="color:#f85149">Error: ' + escHtml(err.message) + '</p>';
   });
