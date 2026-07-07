@@ -267,7 +267,7 @@ body {
 
 .content {
   flex: 1;
-  padding: 24px;
+  padding: 24px 24px 48px;
   overflow-y: auto;
   max-width: 900px;
   margin: 0 auto;
@@ -533,4 +533,64 @@ body {
 @media (min-width: 1200px) {
   .content { max-width: 960px; }
   .sidebar { width: 320px; min-width: 320px; }
+}
+
+/* ─── new file page ─── */
+.newfile-box {
+  max-width: 700px;
+  margin: 0 auto;
+}
+.newfile-box h2 {
+  margin-bottom: 24px;
+}
+.newfile-field {
+  margin-bottom: 16px;
+}
+.newfile-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8b949e;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.newfile-field input {
+  width: 100%;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #c9d1d9;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 14px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+.newfile-field input:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+/* ponytail: reuse .edit-tabs / .tab-btn / .editor-textarea / .edit-preview from existing editor styles */
+#nfe-editor-area textarea {
+  width: 100%;
+  min-height: 350px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #c9d1d9;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 14px;
+  padding: 12px;
+  line-height: 1.7;
+  resize: vertical;
+  box-sizing: border-box;
+}
+#nfe-editor-area textarea:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+.newfile-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
 }

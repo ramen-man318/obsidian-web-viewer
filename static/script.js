@@ -20,7 +20,10 @@ var HOME_CONTENT = '<h1>📖 Obsidian Web Viewer</h1>'
 
 function setUrlState() {
   var params = new URLSearchParams();
-  if (currentPath) params.set('path', currentPath);
+  if (currentPath) {
+    // ponytail: _new sentinel → ?new instead of ?path=_new
+    params.set(currentPath === '_new' ? 'new' : 'path', currentPath === '_new' ? '' : currentPath);
+  }
   var editArea = document.getElementById('edit-content');
   if (editArea && !editArea.classList.contains('hidden')) params.set('mode', 'edit');
   var q = params.toString();
@@ -570,11 +573,23 @@ document.addEventListener('DOMContentLoaded', function() {
   // Check URL params BEFORE navigateHome so it doesn't wipe them
   var params = new URLSearchParams(window.location.search);
   var pathParam = params.get('path');
-  if (!pathParam) navigateHome();
+  var isNew = params.get('new') === '';
+  if (!pathParam && !isNew) navigateHome();
   loadTree();
   fetchPins().then(function(){ loadPins(); });
   // Wire up live preview on editor input
   document.getElementById('editor').addEventListener('input', updatePreview);
+  // Wire up live preview on new-file editor input
+  document.getElementById('newfile-editor').addEventListener('input', function() {
+    if (document.getElementById('nfe-tab-preview').classList.contains('tab-active')) {
+      var content = document.getElementById('newfile-editor').value;
+      document.getElementById('nfe-preview').innerHTML = content
+        ? renderMarkdown(content)
+        : '<p style="color:#8b949e">Preview will appear here...</p>';
+    }
+  });
+  // ?new → open new-file page
+  if (isNew) { promptNewFile(); }
   // Restore URL state — wait for treeData from loadTree()
   if (pathParam) {
     var checkTree = setInterval(function() {
@@ -588,3 +603,83 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 50);
   }
 });
+
+/* ─── new file creation ─── */
+function promptNewFile() {
+  currentPath = '_new';
+  document.getElementById('file-path').textContent = 'New File';
+  document.getElementById('view-content').classList.add('hidden');
+  document.getElementById('edit-content').classList.add('hidden');
+  document.getElementById('newfile-content').classList.remove('hidden');
+  document.getElementById('edit-btn').disabled = true;
+  document.getElementById('delete-btn').style.display = 'none';
+  document.getElementById('newfile-path').value = '';
+  document.getElementById('newfile-editor').value = '';
+  document.getElementById('newfile-path').focus();
+  nfeSwitchTab('edit');
+  document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
+  setUrlState();
+}
+
+function nfeSwitchTab(tab) {
+  var editor = document.getElementById('nfe-editor-area');
+  var preview = document.getElementById('nfe-preview-area');
+  var tabEdit = document.getElementById('nfe-tab-edit');
+  var tabPrev = document.getElementById('nfe-tab-preview');
+  if (tab === 'preview') {
+    editor.classList.add('hidden');
+    preview.classList.remove('hidden');
+    tabEdit.classList.remove('tab-active');
+    tabPrev.classList.add('tab-active');
+    // render preview from editor content
+    var content = document.getElementById('newfile-editor').value;
+    document.getElementById('nfe-preview').innerHTML = content
+      ? renderMarkdown(content)
+      : '<p style="color:#8b949e">Preview will appear here...</p>';
+  } else {
+    editor.classList.remove('hidden');
+    preview.classList.add('hidden');
+    tabEdit.classList.add('tab-active');
+    tabPrev.classList.remove('tab-active');
+  }
+}
+
+function saveNewFile() {
+  var path = document.getElementById('newfile-path').value.trim();
+  if (!path) { alert('Enter a file path.'); return; }
+  // ponytail: auto-add .md if no visible extension
+  var ext = path.includes('.') ? path.split('.').pop().toLowerCase() : '';
+  var VISIBLE_EXTS = ['md','txt','json','yaml','yml','toml','csv','xml','ini','cfg','conf','env','properties','css','js','html','sh','bash','py','rb','lua','sql','rs','go','zig','ts','jsx','tsx','svg','drawio','excalidraw','png','jpg','jpeg','gif','webp'];
+  if (VISIBLE_EXTS.indexOf(ext) < 0) { path += '.md'; }
+  var content = document.getElementById('newfile-editor').value;
+  fetch('/api/save', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({path: path, content: content})
+  }).then(function(r) {
+    if (!r.ok) { return r.json().then(function(d){ throw new Error(d.error || 'Save failed'); }); }
+    return r.json();
+  }).then(function(data) {
+    if (data.ok) {
+      cancelNewFile();
+      openFile(path);
+      loadTree();
+    }
+  }).catch(function(err) {
+    alert('Error: ' + err.message);
+  });
+}
+
+function cancelNewFile() {
+  document.getElementById('newfile-content').classList.add('hidden');
+  document.getElementById('view-content').classList.remove('hidden');
+  document.getElementById('edit-btn').disabled = false;
+  // ponytail: restore url from _new sentinel or blank
+  if (currentPath && currentPath !== '_new') {
+    openFile(currentPath);
+  } else {
+    currentPath = '';
+    navigateHome();
+  }
+  setUrlState();
+}
