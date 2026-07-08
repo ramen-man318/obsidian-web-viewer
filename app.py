@@ -22,10 +22,11 @@ VAULT_ROOT = Path(os.environ.get('OBSIDIAN_VAULT_PATH', Path.home() / 'vault'))
 VAULT_ROOT.mkdir(exist_ok=True)
 
 def safe_path(path_str) -> Path | None:
-    """パストラバーサル対策：.. を拒否"""
-    if '..' in path_str.split('/'):
+    """パストラバーサル対策: .. を拒否、先頭/を除去"""
+    clean = path_str.lstrip('/')
+    if '..' in clean.split('/'):
         return None
-    p = (VAULT_ROOT / path_str).resolve()
+    p = (VAULT_ROOT / clean).resolve()
     if not str(p).startswith(str(VAULT_ROOT.resolve())):
         return None
     return p

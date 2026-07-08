@@ -549,7 +549,9 @@ function renderMarkdown(text) {
     .replace(/(<li[^>]*>.*?<\/li>\n?)+/g, '<ul>$&</ul>')
     // ponytail: 2-space indented text → li with no bullet (keeps indent within list context)
     .replace(/^ {2}([^ \n].*)$/gm, '<li style="margin-left:1.5em;list-style:none">$1</li>')
-    .replace(/\n\n/g, '</p><p>')
+        // ponytail: inline links [text](url)
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/\n\n/g, '</p><p>')
     .replace(/^(?!<[hlu\d])(.+)$/gm, '$1');
   return '<p>'+html+'</p>';
 }
