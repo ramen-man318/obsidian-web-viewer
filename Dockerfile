@@ -19,7 +19,4 @@ VOLUME /app/content
 
 EXPOSE 5000
 
-RUN mkdir -p /data && useradd -r -s /bin/false -d /app appuser && chown -R appuser:appuser /app /data
-USER appuser
-
 CMD ["python", "app.py"]
