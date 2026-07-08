@@ -92,6 +92,16 @@ def save_file():
     data = request.get_json(force=True)
     path = data.get('path', '')
     content = data.get('content', '')
+    # ponytail: reject empty path or filename
+    if not path:
+        return jsonify({'error': 'Path is empty'}), 400
+    # ponytail: reject paths ending with / (empty filename)
+    if path.endswith('/'):
+        return jsonify({'error': 'Filename is empty (path ends with /)'}), 400
+    # ponytail: reject dotfiles (.md, .gitignore etc) — hidden files not shown in viewer
+    filename = path.rstrip('/').split('/')[-1]
+    if filename.startswith('.'):
+        return jsonify({'error': 'Filename starts with dot — hidden files are not displayed'}), 400
     p = safe_path(path)
     if p is None:
         return jsonify({'error': 'Invalid path'}), 400

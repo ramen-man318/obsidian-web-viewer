@@ -1,7 +1,6 @@
 services:
   obsidian-web-viewer:
     build: .
-    user: "1004:1004"
     ports:
       - "${PORT:-5000}:5000"
     volumes:

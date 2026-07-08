@@ -661,6 +661,12 @@ function nfeSwitchTab(tab) {
 function saveNewFile() {
   var path = document.getElementById('newfile-path').value.trim();
   if (!path) { alert('Enter a file path.'); return; }
+  // ponytail: reject paths ending with / (empty filename)
+  if (path.endsWith('/')) { alert('Filename is empty. Enter a filename at the end of the path.'); return; }
+  // ponytail: reject paths with no filename (endsWith won't catch all — e.g. "dir/" or "dir///")
+  var parts = path.split('/');
+  var filename = parts[parts.length - 1];
+  if (!filename || filename === '.' || filename === '..') { alert('Invalid filename. Enter a proper filename.'); return; }
   // ponytail: auto-add .md if no visible extension
   var ext = path.includes('.') ? path.split('.').pop().toLowerCase() : '';
   var VISIBLE_EXTS = ['md','txt','json','yaml','yml','toml','csv','xml','ini','cfg','conf','env','properties','css','js','html','sh','bash','py','rb','lua','sql','rs','go','zig','ts','jsx','tsx','svg','drawio','excalidraw','png','jpg','jpeg','gif','webp'];
