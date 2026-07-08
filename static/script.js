@@ -35,6 +35,7 @@ function setUrlState() {
 function navigateHome() {
   currentPath = '';
   document.getElementById('file-path').textContent = 'Home';
+  document.getElementById('newfile-content').classList.add('hidden');
   document.getElementById('view-content').innerHTML = HOME_CONTENT;
   document.getElementById('edit-content').classList.add('hidden');
   document.getElementById('view-content').classList.remove('hidden');
