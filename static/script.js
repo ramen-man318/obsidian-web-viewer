@@ -35,6 +35,7 @@ function setUrlState() {
 function navigateHome() {
   currentPath = '';
   document.getElementById('file-path').textContent = 'Home';
+  document.getElementById('newfile-content').classList.add('hidden');
   document.getElementById('view-content').innerHTML = HOME_CONTENT;
   document.getElementById('edit-content').classList.add('hidden');
   document.getElementById('view-content').classList.remove('hidden');
@@ -549,7 +550,9 @@ function renderMarkdown(text) {
     .replace(/(<li[^>]*>.*?<\/li>\n?)+/g, '<ul>$&</ul>')
     // ponytail: 2-space indented text → li with no bullet (keeps indent within list context)
     .replace(/^ {2}([^ \n].*)$/gm, '<li style="margin-left:1.5em;list-style:none">$1</li>')
-    .replace(/\n\n/g, '</p><p>')
+        // ponytail: inline links [text](url)
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/\n\n/g, '</p><p>')
     .replace(/^(?!<[hlu\d])(.+)$/gm, '$1');
   return '<p>'+html+'</p>';
 }
@@ -659,6 +662,12 @@ function nfeSwitchTab(tab) {
 function saveNewFile() {
   var path = document.getElementById('newfile-path').value.trim();
   if (!path) { alert('Enter a file path.'); return; }
+  // ponytail: reject paths ending with / (empty filename)
+  if (path.endsWith('/')) { alert('Filename is empty. Enter a filename at the end of the path.'); return; }
+  // ponytail: reject paths with no filename (endsWith won't catch all — e.g. "dir/" or "dir///")
+  var parts = path.split('/');
+  var filename = parts[parts.length - 1];
+  if (!filename || filename === '.' || filename === '..') { alert('Invalid filename. Enter a proper filename.'); return; }
   // ponytail: auto-add .md if no visible extension
   var ext = path.includes('.') ? path.split('.').pop().toLowerCase() : '';
   var VISIBLE_EXTS = ['md','txt','json','yaml','yml','toml','csv','xml','ini','cfg','conf','env','properties','css','js','html','sh','bash','py','rb','lua','sql','rs','go','zig','ts','jsx','tsx','svg','drawio','excalidraw','png','jpg','jpeg','gif','webp'];

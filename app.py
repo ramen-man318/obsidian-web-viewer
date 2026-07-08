@@ -22,10 +22,11 @@ VAULT_ROOT = Path(os.environ.get('OBSIDIAN_VAULT_PATH', Path.home() / 'vault'))
 VAULT_ROOT.mkdir(exist_ok=True)
 
 def safe_path(path_str) -> Path | None:
-    """パストラバーサル対策：.. を拒否"""
-    if '..' in path_str.split('/'):
+    """パストラバーサル対策: .. を拒否、先頭/を除去"""
+    clean = path_str.lstrip('/')
+    if '..' in clean.split('/'):
         return None
-    p = (VAULT_ROOT / path_str).resolve()
+    p = (VAULT_ROOT / clean).resolve()
     if not str(p).startswith(str(VAULT_ROOT.resolve())):
         return None
     return p
@@ -91,6 +92,16 @@ def save_file():
     data = request.get_json(force=True)
     path = data.get('path', '')
     content = data.get('content', '')
+    # ponytail: reject empty path or filename
+    if not path:
+        return jsonify({'error': 'Path is empty'}), 400
+    # ponytail: reject paths ending with / (empty filename)
+    if path.endswith('/'):
+        return jsonify({'error': 'Filename is empty (path ends with /)'}), 400
+    # ponytail: reject dotfiles (.md, .gitignore etc) — hidden files not shown in viewer
+    filename = path.rstrip('/').split('/')[-1]
+    if filename.startswith('.'):
+        return jsonify({'error': 'Filename starts with dot — hidden files are not displayed'}), 400
     p = safe_path(path)
     if p is None:
         return jsonify({'error': 'Invalid path'}), 400
