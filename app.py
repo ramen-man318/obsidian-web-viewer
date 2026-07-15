@@ -105,6 +105,13 @@ def save_file():
     p = safe_path(path)
     if p is None:
         return jsonify({'error': 'Invalid path'}), 400
+    # 空content → ファイル削除（ponytail: 1回目のAPIコールで削除）
+    if content == '' and p.exists():
+        try:
+            p.unlink()
+            return jsonify({'ok': True, 'deleted': True, 'path': path})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
     p.parent.mkdir(parents=True, exist_ok=True)
     try:
         p.write_text(content, 'utf-8')
@@ -151,7 +158,7 @@ def raw_file():
     return send_file(str(p), mimetype=mime or 'application/octet-stream')
 
 
-PINS_FILE = os.environ.get('PINS_FILE', '/data/pins.json')
+PINS_FILE = os.environ.get('PINS_FILE', str(Path.home() / '.vault' / 'owv-pins.json'))
 
 def _load_pins():
     try:

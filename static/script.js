@@ -280,12 +280,6 @@ function togglePinFolder(el, path) {
   if (state[key]) {
     delete state[key];
   } else {
-    // accordion: close all other pinned folders first
-    for (var k in state) {
-      if (k.indexOf('_pin_') === 0 && k !== key) {
-        delete state[k];
-      }
-    }
     state[key] = true;
   }
   setOpenFolders(state);
@@ -456,12 +450,23 @@ function saveFile() {
 }
 
 function deleteFile() {
-  if (!confirm('Delete '+currentPath+'?')) return;
+  if (!currentPath) return;
+  if (!confirm('Delete ' + currentPath + '?')) return;
   fetch('/api/save',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({path:currentPath, content:''})
-  }).then(function(){ window.location.reload(); });
+  }).then(function(r){
+    if (!r.ok) { return r.json().then(function(d){ throw new Error(d.error || 'Delete failed'); }); }
+    return r.json();
+  }).then(function(data){
+    if (data.ok) {
+      navigateHome();
+      loadTree();
+    }
+  }).catch(function(err) {
+    alert('Error: ' + err.message);
+  });
 }
 
 function searchFiles(q) {
@@ -487,12 +492,26 @@ function searchFiles(q) {
 
 /* ─── markdown ─── */
 function renderMarkdown(text) {
-  // ponytail: strip YAML frontmatter (---\n...\n---)
-  text = text.replace(/^---\n[\s\S]*?\n---\n*/, '');
+  // ponytail: strip YAML frontmatter (---\\n...\\n---)
+  text = text.replace(/^---\\n[\\s\\S]*?\\n---\\n*/, '');
+  // ponytail: extract code blocks FIRST so their content isn't mangled by later transforms
+  var codeBlocks = [];
+  text = text.replace(/```(\w*)\n([\s\S]*?)```/g, function(m, lang, code) {
+    var idx = codeBlocks.length;
+    codeBlocks.push('<pre' + (lang ? ' data-lang="' + escHtml(lang) + '"' : '') + '><code>' + escHtml(code) + '</code></pre>');
+    return '%%CODEBLOCK_' + idx + '%%';
+  });
+  // ponytail: extract inline code so it's also protected from HTML escaping
+  var inlineCodes = [];
+  text = text.replace(/`([^`\\n]+)`/g, function(m, code) {
+    var idx = inlineCodes.length;
+    inlineCodes.push('<code>' + escHtml(code) + '</code>');
+    return '%%INLINECODE_' + idx + '%%';
+  });
   var html = text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     // ponytail: [[wikilink]] → clickable anchor
-    .replace(/\[\[([^\]]+)\]\]/g, function(m, name) {
+  .replace(/\[\[([^\]]+)\]\]/g, function(m, name) {
       var found = findNote(name);
       if (found) return '<a href="#" class="wikilink" onclick="navigateToNote(\''+name+'\');return false">'+escHtml(name)+'</a>';
       return '<span class="wikilink missing">'+escHtml(name)+'</span>';
@@ -554,15 +573,28 @@ function renderMarkdown(text) {
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
         .replace(/\n\n/g, '</p><p>')
     .replace(/^(?!<[hlu\d])(.+)$/gm, '$1');
+  // ponytail: restore code blocks (must be after all other transforms)
+  html = html.replace(/%%CODEBLOCK_(\d+)%%/g, function(m, idx) {
+    return codeBlocks[parseInt(idx)] || m;
+  });
+  // ponytail: restore inline code
+  html = html.replace(/%%INLINECODE_(\d+)%%/g, function(m, idx) {
+    return inlineCodes[parseInt(idx)] || m;
+  });
   return '<p>'+html+'</p>';
 }
 
 /* ponytail: flat tree search for [[wikilink]] resolution */
+/* パス付き（[[path/to/file.md]]）とファイル名のみ（[[file]]）両対応 */
 function findNote(name) {
   var q = name.toLowerCase().replace(/\.md$/,'');
   function walk(items) {
     for (var i=0;i<items.length;i++) {
-      if (items[i].type==='file' && items[i].name.toLowerCase().replace(/\.md$/,'')===q) return items[i].path;
+      if (items[i].type==='file') {
+        var filePath = items[i].path.toLowerCase().replace(/\.md$/,'');
+        // 完全パス一致（[[projects/foo/bar.md]]）またはファイル名一致（[[bar]]）
+        if (filePath === q || filePath.split('/').pop() === q) return items[i].path;
+      }
       if (items[i].children) { var r=walk(items[i].children); if (r) return r; }
     }
     return null;

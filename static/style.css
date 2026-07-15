@@ -319,6 +319,13 @@ body {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.9em;
 }
+.markdown-view pre code {
+  background: none;
+  padding: 0;
+  border: none;
+  font-size: 0.85em;
+  line-height: 1.5;
+}
 .markdown-view p > code, .markdown-view li > code {
   background: #1f2428;
   padding: 2px 6px;
