@@ -502,7 +502,7 @@ function renderMarkdown(text) {
   text = text.replace(/^---\\n[\\s\\S]*?\\n---\\n*/, '');
   // ponytail: extract code blocks FIRST so their content isn't mangled by later transforms
   var codeBlocks = [];
-  text = text.replace(/```(\\w*)\\n([\\s\\S]*?)```/g, function(m, lang, code) {
+  text = text.replace(/```(\w*)\n([\s\S]*?)```/g, function(m, lang, code) {
     var idx = codeBlocks.length;
     codeBlocks.push('<pre' + (lang ? ' data-lang="' + escHtml(lang) + '"' : '') + '><code>' + escHtml(code) + '</code></pre>');
     return '%%CODEBLOCK_' + idx + '%%';
