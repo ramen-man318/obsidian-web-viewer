@@ -498,12 +498,26 @@ function searchFiles(q) {
 
 /* ─── markdown ─── */
 function renderMarkdown(text) {
-  // ponytail: strip YAML frontmatter (---\n...\n---)
-  text = text.replace(/^---\n[\s\S]*?\n---\n*/, '');
+  // ponytail: strip YAML frontmatter (---\\n...\\n---)
+  text = text.replace(/^---\\n[\\s\\S]*?\\n---\\n*/, '');
+  // ponytail: extract code blocks FIRST so their content isn't mangled by later transforms
+  var codeBlocks = [];
+  text = text.replace(/```(\\w*)\\n([\\s\\S]*?)```/g, function(m, lang, code) {
+    var idx = codeBlocks.length;
+    codeBlocks.push('<pre' + (lang ? ' data-lang="' + escHtml(lang) + '"' : '') + '><code>' + escHtml(code) + '</code></pre>');
+    return '%%CODEBLOCK_' + idx + '%%';
+  });
+  // ponytail: extract inline code so it's also protected from HTML escaping
+  var inlineCodes = [];
+  text = text.replace(/`([^`\\n]+)`/g, function(m, code) {
+    var idx = inlineCodes.length;
+    inlineCodes.push('<code>' + escHtml(code) + '</code>');
+    return '%%INLINECODE_' + idx + '%%';
+  });
   var html = text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     // ponytail: [[wikilink]] → clickable anchor
-    .replace(/\[\[([^\]]+)\]\]/g, function(m, name) {
+  .replace(/\[\[([^\]]+)\]\]/g, function(m, name) {
       var found = findNote(name);
       if (found) return '<a href="#" class="wikilink" onclick="navigateToNote(\''+name+'\');return false">'+escHtml(name)+'</a>';
       return '<span class="wikilink missing">'+escHtml(name)+'</span>';
@@ -565,6 +579,14 @@ function renderMarkdown(text) {
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
         .replace(/\n\n/g, '</p><p>')
     .replace(/^(?!<[hlu\d])(.+)$/gm, '$1');
+  // ponytail: restore code blocks (must be after all other transforms)
+  html = html.replace(/%%CODEBLOCK_(\d+)%%/g, function(m, idx) {
+    return codeBlocks[parseInt(idx)] || m;
+  });
+  // ponytail: restore inline code
+  html = html.replace(/%%INLINECODE_(\d+)%%/g, function(m, idx) {
+    return inlineCodes[parseInt(idx)] || m;
+  });
   return '<p>'+html+'</p>';
 }
 
