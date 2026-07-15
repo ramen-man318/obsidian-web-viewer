@@ -456,12 +456,23 @@ function saveFile() {
 }
 
 function deleteFile() {
-  if (!confirm('Delete '+currentPath+'?')) return;
+  if (!currentPath) return;
+  if (!confirm('Delete ' + currentPath + '?')) return;
   fetch('/api/save',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({path:currentPath, content:''})
-  }).then(function(){ window.location.reload(); });
+  }).then(function(r){
+    if (!r.ok) { return r.json().then(function(d){ throw new Error(d.error || 'Delete failed'); }); }
+    return r.json();
+  }).then(function(data){
+    if (data.ok) {
+      navigateHome();
+      loadTree();
+    }
+  }).catch(function(err) {
+    alert('Error: ' + err.message);
+  });
 }
 
 function searchFiles(q) {
@@ -558,11 +569,16 @@ function renderMarkdown(text) {
 }
 
 /* ponytail: flat tree search for [[wikilink]] resolution */
+/* パス付き（[[path/to/file.md]]）とファイル名のみ（[[file]]）両対応 */
 function findNote(name) {
   var q = name.toLowerCase().replace(/\.md$/,'');
   function walk(items) {
     for (var i=0;i<items.length;i++) {
-      if (items[i].type==='file' && items[i].name.toLowerCase().replace(/\.md$/,'')===q) return items[i].path;
+      if (items[i].type==='file') {
+        var filePath = items[i].path.toLowerCase().replace(/\.md$/,'');
+        // 完全パス一致（[[projects/foo/bar.md]]）またはファイル名一致（[[bar]]）
+        if (filePath === q || filePath.split('/').pop() === q) return items[i].path;
+      }
       if (items[i].children) { var r=walk(items[i].children); if (r) return r; }
     }
     return null;
