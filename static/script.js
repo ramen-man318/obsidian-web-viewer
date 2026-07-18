@@ -335,6 +335,18 @@ function loadPins() {
     }
   }
   container.innerHTML = html;
+  // ponytail: wire up right-click on pinned items too (regenerated DOM)
+  container.querySelectorAll('.tree-item').forEach(function(el) {
+    el.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var path = el.getAttribute('data-path');
+      if (path && path.indexOf('.') === -1) {
+        contextMenuFolderPath = path;
+        showContextMenu(e.clientX, e.clientY);
+      }
+    });
+  });
 }
 
 /* ─── file operations ─── */
