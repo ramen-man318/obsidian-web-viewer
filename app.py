@@ -22,8 +22,9 @@ VAULT_ROOT = Path(os.environ.get('OBSIDIAN_VAULT_PATH', Path.home() / 'vault'))
 VAULT_ROOT.mkdir(exist_ok=True)
 
 def safe_path(path_str) -> Path | None:
-    """パストラバーサル対策: .. を拒否、先頭/を除去"""
+    """パストラバーサル対策: .. を拒否、先頭/や先頭vault/を除去"""
     clean = path_str.lstrip('/')
+    clean = clean.removeprefix('vault/')
     if '..' in clean.split('/'):
         return None
     p = (VAULT_ROOT / clean).resolve()
@@ -105,7 +106,12 @@ def save_file():
     p = safe_path(path)
     if p is None:
         return jsonify({'error': 'Invalid path'}), 400
-    # 空content → ファイル削除（ponytail: 1回目のAPIコールで削除）
+    # 空content かつ ファイルが未存在 → 空ファイル作成（ponytail: 新規作成兼用）
+    if content == '' and not p.exists():
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text('', 'utf-8')
+        return jsonify({'ok': True, 'path': path})
+    # 空content かつ ファイルが存在 → 削除（ponytail: 1回目のAPIコールで削除）
     if content == '' and p.exists():
         try:
             p.unlink()
