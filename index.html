@@ -36,6 +36,11 @@
   <div class="tree" id="file-tree"></div>
 </div>
 
+<!-- context menu -->
+<div class="context-menu hidden" id="context-menu">
+  <div class="context-menu-item" onclick="contextMenuNewFile()">📄 New File</div>
+</div>
+
 <!-- main content -->
 <div class="main" id="main">
   <div class="top-bar">
@@ -43,6 +48,7 @@
     <div class="spacer"></div>
     <div class="actions">
       <button class="btn" onclick="promptNewFile()">＋ New</button>
+      <button class="btn" id="copy-btn" onclick="copyFileContent()" style="display:none">📋 Copy</button>
       <button class="btn" id="edit-btn" onclick="toggleEdit()">✏️ Edit</button>
       <button class="btn btn-danger" id="delete-btn" onclick="deleteFile()" style="display:none">🗑 Delete</button>
     </div>

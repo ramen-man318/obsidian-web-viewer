@@ -1,6 +1,7 @@
 /* ─── global state ─── */
 var currentPath = '';
 var treeData = null;
+var contextMenuFolderPath = ''; // for right-click context menu (issue #25)
 
 /* ─── home screen ─── */
 var HOME_CONTENT = '<h1>📖 Obsidian Web Viewer</h1>'
@@ -43,6 +44,7 @@ function navigateHome() {
   document.getElementById('edit-btn').className = 'btn btn-primary';
   document.getElementById('edit-btn').disabled = true;
   document.getElementById('delete-btn').style.display = 'none';
+  document.getElementById('copy-btn').style.display = 'none';
   document.getElementById('edit-tabs').style.display = 'none';
   // Remove tree active highlight
   document.querySelectorAll('.tree-item.active').forEach(function(e){e.classList.remove('active')});
@@ -149,6 +151,19 @@ function loadTree() {
     }
     tree.innerHTML = html;
     loadPins();
+    // ponytail: wire up right-click context menu on tree items (issue #25)
+    document.querySelectorAll('#file-tree .tree-item, #pinned-items .tree-item').forEach(function(el) {
+      el.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var path = el.getAttribute('data-path');
+        // Only show for folders (no extension = folder)
+        if (path && path.indexOf('.') === -1) {
+          contextMenuFolderPath = path;
+          showContextMenu(e.clientX, e.clientY);
+        }
+      });
+    });
   });
 }
 
@@ -337,6 +352,7 @@ function openFile(path) {
     document.getElementById('edit-path').textContent = 'vault/' + path;
     document.getElementById('delete-btn').style.display = 'none';
     document.getElementById('edit-tabs').style.display = 'none';
+    document.getElementById('copy-btn').style.display = 'none';
     var view = document.getElementById('view-content');
     var edit = document.getElementById('edit-content');
     edit.classList.add('hidden');
@@ -366,6 +382,7 @@ function openFile(path) {
     document.getElementById('edit-path').textContent = 'vault/' + path;
     document.getElementById('editor').value = data.content;
     document.getElementById('delete-btn').style.display = 'inline-block';
+    document.getElementById('copy-btn').style.display = 'inline-block';
     document.getElementById('edit-tabs').style.display = '';
     switchEditTab('edit');
     var view = document.getElementById('view-content');
@@ -553,7 +570,8 @@ function renderMarkdown(text) {
       return html;
     })
     // ponytail: indented lists (2, 4, 6, 8 spaces → proportional margin)
-    .replace(/^( {2,8})- (.+)$/gm, function(m, spaces, text) {
+    // also support * as bullet point (issue #24)
+    .replace(/^( {2,8})[-*] (.+)$/gm, function(m, spaces, text) {
       var indent = (spaces.length / 2) * 1.5;
       return '<li style="margin-left:' + indent + 'em">' + text + '</li>';
     })
@@ -563,7 +581,7 @@ function renderMarkdown(text) {
       return '<li style="margin-left:' + indent + 'em;list-style:none">' + rest + '</li>';
     })
     // ponytail: flat lists at column 0
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
     .replace(/^(\d+[.)] .+)$/gm, '<li style="list-style:none">$1</li>')
     // wrap consecutive <li> in <ul>
     .replace(/(<li[^>]*>.*?<\/li>\n?)+/g, '<ul>$&</ul>')
@@ -651,6 +669,58 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+/* ─── copy file content ─── */
+function copyFileContent() {
+  var btn = document.getElementById('copy-btn');
+  // Get content from the most reliable source: the editor textarea
+  var content = document.getElementById('editor').value;
+  if (!content) {
+    // If editor is empty, try the view content as fallback
+    var viewEl = document.getElementById('view-content');
+    content = viewEl ? viewEl.textContent : '';
+  }
+  if (!content) {
+    alert('No content to copy.');
+    return;
+  }
+  // Try modern clipboard API first, fall back to legacy execCommand
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(content).then(function() {
+      btn.textContent = '✅ Copied!';
+      setTimeout(function() { btn.textContent = '📋 Copy'; }, 2000);
+    }).catch(function(err) {
+      // Clipboard API failed — try fallback
+      fallbackCopy(content, btn);
+    });
+  } else {
+    fallbackCopy(content, btn);
+  }
+}
+
+function fallbackCopy(text, btn) {
+  // Legacy approach: create a temporary textarea
+  var textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    var ok = document.execCommand('copy');
+    if (ok) {
+      btn.textContent = '✅ Copied!';
+      setTimeout(function() { btn.textContent = '📋 Copy'; }, 2000);
+    } else {
+      btn.textContent = '⚠️ Copy failed';
+      setTimeout(function() { btn.textContent = '📋 Copy'; }, 2000);
+    }
+  } catch (e) {
+    btn.textContent = '⚠️ Copy failed';
+    setTimeout(function() { btn.textContent = '📋 Copy'; }, 2000);
+  }
+  document.body.removeChild(textarea);
+}
+
 /* ─── new file creation ─── */
 function promptNewFile() {
   currentPath = '_new';
@@ -694,6 +764,8 @@ function nfeSwitchTab(tab) {
 function saveNewFile() {
   var path = document.getElementById('newfile-path').value.trim();
   if (!path) { alert('Enter a file path.'); return; }
+  // ponytail: strip leading vault/ prefix if present (issue #23)
+  path = path.replace(/^vault\//, '');
   // ponytail: reject paths ending with / (empty filename)
   if (path.endsWith('/')) { alert('Filename is empty. Enter a filename at the end of the path.'); return; }
   // ponytail: reject paths with no filename (endsWith won't catch all — e.g. "dir/" or "dir///")
@@ -705,6 +777,25 @@ function saveNewFile() {
   var VISIBLE_EXTS = ['md','txt','json','yaml','yml','toml','csv','xml','ini','cfg','conf','env','properties','css','js','html','sh','bash','py','rb','lua','sql','rs','go','zig','ts','jsx','tsx','svg','drawio','excalidraw','png','jpg','jpeg','gif','webp'];
   if (VISIBLE_EXTS.indexOf(ext) < 0) { path += '.md'; }
   var content = document.getElementById('newfile-editor').value;
+  // ponytail: check if file already exists (issue #23 feedback)
+  fetch('/api/read?path=' + encodeURIComponent(path)).then(function(r) {
+    if (r.ok) {
+      // File exists — confirm overwrite
+      if (!confirm('File already exists. Overwrite?\n\n' + path)) {
+        return; // bail out — don't save
+      }
+      // Ensure at least minimal content so the server doesn't interpret as delete
+      if (!content) { content = '\n'; }
+    }
+    // proceed with save
+    doSaveNewFile(path, content);
+  }).catch(function() {
+    // read failed (404 etc) — file doesn't exist, safe to create
+    doSaveNewFile(path, content);
+  });
+}
+
+function doSaveNewFile(path, content) {
   fetch('/api/save', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -736,3 +827,32 @@ function cancelNewFile() {
   }
   setUrlState();
 }
+
+/* ─── context menu (right-click) ─── */
+function showContextMenu(x, y) {
+  var menu = document.getElementById('context-menu');
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+  menu.classList.remove('hidden');
+}
+
+function hideContextMenu() {
+  document.getElementById('context-menu').classList.add('hidden');
+}
+
+function contextMenuNewFile() {
+  hideContextMenu();
+  var folder = contextMenuFolderPath;
+  promptNewFile();
+  // Pre-fill the path with the right-clicked folder
+  if (folder) {
+    document.getElementById('newfile-path').value = folder + '/';
+  }
+}
+
+// Click anywhere to hide context menu
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.context-menu')) {
+    hideContextMenu();
+  }
+});

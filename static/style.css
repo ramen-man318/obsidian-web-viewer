@@ -601,3 +601,26 @@ body {
   display: flex;
   gap: 8px;
 }
+
+/* ─── context menu (right-click) ─── */
+.context-menu {
+  position: fixed;
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 4px 0;
+  min-width: 160px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.context-menu-item {
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #c9d1d9;
+  cursor: pointer;
+  user-select: none;
+}
+.context-menu-item:hover {
+  background: #1f6feb;
+  color: #fff;
+}
