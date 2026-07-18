@@ -46,7 +46,7 @@ cp .env.example .env
 
 ```env
 # Vaultディレクトリの絶対パス（ホスト側）
-OBSIDIAN_VAULT=/path/to/your/vault
+OBSIDIAN_VAULT=/home/ramen_man/vault
 
 # ポート番号（省略時: 5000）
 PORT=5000
@@ -100,7 +100,7 @@ Vaultパスを省略した場合、`~/vault` がデフォルトです。
 
 このアプリケーションはFlaskを実行するユーザー権限でファイル操作を行います。
 
-- **ローカル起動** → 一般ユーザー権限で動作。Dockerで以前作成した root所有ファイルなどがあると、削除・編集で `Permission denied` が発生します
+- **ローカル起動** → `ramen_man` ユーザー権限で動作。Dockerで以前作成した root所有ファイルなどがあると、削除・編集で `Permission denied` が発生します
 - **Docker起動** → コンテナ内の `appuser` 権限で動作。ホスト側のuidと一致しなくても、コンテナ内からは一貫した権限でアクセスできます
 
 Docker Compose で起動すれば、これらの問題を意識する必要はほぼありません。
@@ -114,7 +114,7 @@ Docker Compose で起動すれば、これらの問題を意識する必要は�
 **解決方法**:
 
 ```bash
-sudo find ~/vault -user root -type f -exec chown $(whoami):$(whoami) {} +
+sudo find ~/vault -user root -type f -exec chown ramen_man:ramen_man {} +
 ```
 
 ### ピン留めデータ
