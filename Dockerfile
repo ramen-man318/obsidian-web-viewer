@@ -17,12 +17,11 @@ COPY static/ ./static/
 # コンテンツディレクトリ（外部マウント用）
 VOLUME /app/content
 
-# ピン留めデータ保存用
+# ピン留めデータ保存用＋書き込み権限確保
+RUN mkdir -p /data
+
 VOLUME /data
 
 EXPOSE 5000
-
-RUN mkdir -p /data && useradd -r -s /bin/false -d /app appuser && chown -R appuser:appuser /app /data
-USER appuser
 
 CMD ["python", "app.py"]
